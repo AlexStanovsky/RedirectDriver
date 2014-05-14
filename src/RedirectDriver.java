@@ -19,6 +19,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -147,7 +148,9 @@ public class RedirectDriver {
 		}
 
 		executor.shutdown();
-		while (!executor.isTerminated()) {
+		try {
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
 		}
 
 		// Close writer
@@ -164,7 +167,7 @@ public class RedirectDriver {
 
 	}
 
-	private static Queue<String> getSitesFromFile(String fileName) {
+	public static Queue<String> getSitesFromFile(String fileName) {
 		Queue<String> resultList = new LinkedList<String>();
 
 		BufferedReader br = null;
