@@ -22,8 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxProfile;
 
 public class SiteDriver {
 	public static final boolean DEBUG_MODE = false;
@@ -31,16 +29,18 @@ public class SiteDriver {
 	private Queue<String> _sites;
 	private static int _numOfThreads = 15;
 	private EnvironmentPrefix _env;
+	private String _driverName;
 
 	private final static String[][] MANDATORY_PARAMS = {
-			{ "sites_file", "threads", "env" },
-			{ "db_host", "db_user", "db_pass", "threads", "env" } };
+			{ "sites_file", "threads", "env", "browser" },
+			{ "db_host", "db_user", "db_pass", "threads", "env", "browser" } };
 
 	public static void main(String[] args) throws IOException {
 
 		Map<String, String> params = null;
 		int numOfThreads = _numOfThreads;
 		EnvironmentPrefix env = EnvironmentPrefix.LOCAL;
+		String driverName  = null;
 
 		try {
 			params = parseParams(args);
@@ -56,18 +56,24 @@ public class SiteDriver {
 			} catch (Exception ex) {
 			}
 
+			driverName = params.get("browser").toUpperCase();
+			
+			if (new WebDriverFactory().isDriverLegal(driverName) == false) {
+				throw new Exception("Illegal browser was supplied");
+			}
+
 		} catch (Exception e) {
 			System.out.println("Missing param: " + e.getMessage());
 			System.out.println("Usage:");
 			System.out
 					.println("	java -jar "
 							+ SiteDriver.class.getName()
-							+ ".jar db_host=[host] db_name=[name] db_user=[user] db_pass=[pass] theads=[num] env=[LOCAL/QA/TEST/STAGING/PRODUCTION]");
+							+ ".jar db_host=[host] db_name=[name] db_user=[user] db_pass=[pass] theads=[num] env=[LOCAL/QA/TEST/STAGING/PRODUCTION] browser=[IE/FF/CH]");
 			System.out.println("or:");
 			System.out
 					.println("	java -jar "
 							+ SiteDriver.class.getName()
-							+ ".jar sites_file=[file] theads=[num] env=[LOCAL/QA/TEST/STAGING/PRODUCTION]");
+							+ ".jar sites_file=[file] theads=[num] env=[LOCAL/QA/TEST/STAGING/PRODUCTION] browser=[IE/FF/CH]");
 			System.exit(1);
 		}
 
@@ -81,7 +87,7 @@ public class SiteDriver {
 					params.get("db_pass"));
 		}
 
-		new SiteDriver(_sites, numOfThreads, env).executeTests();
+		new SiteDriver(_sites, numOfThreads, env, driverName).executeTests();
 	}
 
 	public static Map<String, String> parseParams(String[] args)
@@ -114,10 +120,12 @@ public class SiteDriver {
 		}
 	}
 
-	public SiteDriver(Queue<String> sites, int threads, EnvironmentPrefix env) {
+	public SiteDriver(Queue<String> sites, int threads, EnvironmentPrefix env,
+			 String dirverName) {
 		_numOfThreads = threads;
 		_env = env;
 		_sites = sites;
+		_driverName = dirverName;
 	}
 
 	private void executeTests() throws IOException {
@@ -132,12 +140,14 @@ public class SiteDriver {
 		Queue<WebDriver> drivers = new ArrayBlockingQueue<WebDriver>(
 				_numOfThreads);
 
+		WebDriverFactory webDriverFactory = new WebDriverFactory();
+
 		for (int i = 0; i < Math.min(_numOfThreads, numOfSites); i++) {
-			// The Firefox driver supports javascript
-			FirefoxProfile profile = new FirefoxProfile();
-			profile.setPreference("network.http.redirection-limit", 1);
-			WebDriver fireFoxDriver = new FirefoxDriver(profile);
-			drivers.offer(fireFoxDriver);
+
+			WebDriver dirver = webDriverFactory.createDriver(_driverName);
+			if (dirver != null) {
+				drivers.offer(dirver);
+			}
 		}
 
 		ExecutorService executor = Executors.newFixedThreadPool(_numOfThreads);
