@@ -1,19 +1,21 @@
+
 import java.util.HashMap;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.ie.InternetExplorerDriver;
+
+import Drivers.InternetExplorerDriverEx;
 
 
 public class WebDriverFactory {
 
-	private HashMap<String, Class> _possibleDrivers;
+	private HashMap<String, Class<? extends WebDriver>> _possibleDrivers;
 	
 	public WebDriverFactory(){
-		_possibleDrivers = new HashMap<String, Class>();
+		_possibleDrivers = new HashMap<String, Class<? extends WebDriver>>();
 		_possibleDrivers.put("FF", FirefoxDriver.class);
-		_possibleDrivers.put("IE", InternetExplorerDriver.class);
+		_possibleDrivers.put("IE", InternetExplorerDriverEx.class);
 		_possibleDrivers.put("CH", ChromeDriver.class);
 	}
 	
@@ -24,11 +26,11 @@ public class WebDriverFactory {
 	public WebDriver createDriver(String driverName){
 		if (isDriverLegal(driverName))
 		{
-			Class webDriverClass = _possibleDrivers.get(driverName);
+			Class<? extends WebDriver> webDriverClass = _possibleDrivers.get(driverName);
 			
 			WebDriver driver = null;
 			try {
-				driver = (WebDriver) webDriverClass.getConstructor().newInstance();
+				driver = webDriverClass.getConstructor().newInstance();
 		
 			} catch (Exception e) {
 				// Initialization error

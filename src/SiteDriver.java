@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
 
+
 public class SiteDriver {
 	public static final boolean DEBUG_MODE = false;
 	public static final String DELIMITER = "^";
