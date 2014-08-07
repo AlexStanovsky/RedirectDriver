@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.Queue;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class RedirectDriverWorker extends DriverWorkerBase {
 
@@ -29,30 +27,7 @@ public class RedirectDriverWorker extends DriverWorkerBase {
 				String linkWithTest = String.format("%s&test=%s", redirectLink,
 						testName);
 
-				String currentUrl = "Error in get Url";
-
-				try {
-
-					// Redirect to link
-					driver.get(linkWithTest);
-					
-					WebDriverWait wait = new WebDriverWait(driver, 20);
-					wait.until(ExpectedConditions.not(ExpectedConditions
-							.titleIs("")));
-					
-
-				} catch (Throwable err) {
-					System.out
-							.println("Error in navigation to " + linkWithTest);
-				}
-
-				try {
-					currentUrl = driver.getCurrentUrl();
-				} catch (Throwable tr) {
-					System.out
-							.println("Couldn't get current url for redirect :"
-									+ redirectLink);
-				}
+				String currentUrl = redirectToLink(driver, linkWithTest);
 
 				result += SiteDriver.DELIMITER + currentUrl;
 			}
